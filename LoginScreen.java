@@ -9,27 +9,46 @@ public class LoginScreen extends JFrame implements ActionListener {
 
     public LoginScreen() {
         setTitle("FCI Seminar Management System");
-        setSize(400, 250);
+        setSize(420, 280);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null); // Centers the window
-        setLayout(new GridLayout(4, 1, 10, 10)); 
+        setLayout(new BorderLayout(10, 10));
 
+        JPanel header = new JPanel(new BorderLayout());
+        header.setBorder(BorderFactory.createEmptyBorder(15, 20, 5, 20));
         JLabel title = new JLabel("Seminar Login", SwingConstants.CENTER);
-        title.setFont(new Font("Arial", Font.BOLD, 20));
-        add(title);
+        title.setFont(new Font("Segoe UI", Font.BOLD, 22));
+        JLabel subtitle = new JLabel("Enter your username and password", SwingConstants.CENTER);
+        subtitle.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        header.add(title, BorderLayout.CENTER);
+        header.add(subtitle, BorderLayout.SOUTH);
+        add(header, BorderLayout.NORTH);
 
-        JPanel inputs = new JPanel(new GridLayout(2, 2, 5, 5));
-        inputs.add(new JLabel("   Username:"));
+        JPanel center = new JPanel();
+        center.setBorder(BorderFactory.createEmptyBorder(10, 40, 10, 40));
+        center.setLayout(new GridLayout(2, 2, 8, 8));
+
+        JLabel userLabel = new JLabel("Username");
+        userLabel.setFont(new Font("Segoe UI", Font.PLAIN, 13));
         userField = new JTextField();
-        inputs.add(userField);
-        inputs.add(new JLabel("   Password:"));
-        passField = new JPasswordField();
-        inputs.add(passField);
-        add(inputs);
 
+        JLabel passLabel = new JLabel("Password");
+        passLabel.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        passField = new JPasswordField();
+
+        center.add(userLabel);
+        center.add(userField);
+        center.add(passLabel);
+        center.add(passField);
+        add(center, BorderLayout.CENTER);
+
+        JPanel footer = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        footer.setBorder(BorderFactory.createEmptyBorder(5, 20, 15, 20));
         btnLogin = new JButton("Login");
+        btnLogin.setPreferredSize(new Dimension(120, 30));
         btnLogin.addActionListener(this);
-        add(btnLogin);
+        footer.add(btnLogin);
+        add(footer, BorderLayout.SOUTH);
 
         setVisible(true);
     }
