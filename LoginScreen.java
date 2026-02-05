@@ -71,6 +71,7 @@ public class LoginScreen extends JFrame implements ActionListener {
             this.dispose(); 
             
             if (foundUser instanceof Student) {
+                new StudentDashboard((Student) foundUser);
 
             } else if (foundUser instanceof Coordinator) {
                 new CoordinatorDashboard();
