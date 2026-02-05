@@ -1,0 +1,9 @@
+# Java class files
+*.class
+
+# Virtual environments
+.venv/
+
+# OS junk
+.DS_Store
+Thumbs.db
