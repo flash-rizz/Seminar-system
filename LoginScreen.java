@@ -57,7 +57,7 @@ public class LoginScreen extends JFrame implements ActionListener {
                 new CoordinatorDashboard();
 
             } else if (foundUser instanceof Evaluator) {
-
+                new EvaluatorDashboard((Evaluator) foundUser);
             }
         } else {
             JOptionPane.showMessageDialog(this, "Invalid Username or Password", "Error", JOptionPane.ERROR_MESSAGE);

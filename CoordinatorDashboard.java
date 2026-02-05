@@ -98,6 +98,14 @@ public class CoordinatorDashboard extends JFrame {
         panel.add(awardBtn);
         panel.add(awardResultLabel);
 
+        JButton top3Btn = new JButton("Show Top 3");
+        top3Btn.addActionListener(e -> handleShowTop3());
+        panel.add(top3Btn);
+
+        JButton logoutBtn = new JButton("Logout");
+        logoutBtn.addActionListener(e -> handleLogout());
+        panel.add(logoutBtn);
+
         return panel;
     }
 
@@ -191,6 +199,34 @@ public class CoordinatorDashboard extends JFrame {
         awardResultLabel.setText("Highest score: " + studentName + " (" + topScore + ")");
     }
 
+    private void handleShowTop3() {
+        if (SeminarSystem.evaluations == null || SeminarSystem.evaluations.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "No evaluations available.");
+            return;
+        }
+
+        ArrayList<Object> evals = new ArrayList<>(SeminarSystem.evaluations);
+        evals.sort((a, b) -> Double.compare(getScoreFromEvaluation(b), getScoreFromEvaluation(a)));
+
+        StringBuilder sb = new StringBuilder("Top 3 Rankings:\n");
+        int rank = 1;
+        for (Object eval : evals) {
+            if (rank > 3) break;
+            double score = getScoreFromEvaluation(eval);
+            if (score < 0) continue;
+            String studentName = getStudentNameFromEvaluation(eval);
+            if (studentName == null) studentName = "Unknown Student";
+            sb.append(rank).append(". ").append(studentName).append(" (").append(score).append(")\n");
+            rank++;
+        }
+
+        if (rank == 1) {
+            sb.append("No valid evaluation scores found.");
+        }
+
+        JOptionPane.showMessageDialog(this, sb.toString());
+    }
+
     private double getScoreFromEvaluation(Object eval) {
         try {
             Method m = eval.getClass().getMethod("getTotalScore");
@@ -223,5 +259,10 @@ public class CoordinatorDashboard extends JFrame {
             return null;
         }
         return null;
+    }
+
+    private void handleLogout() {
+        this.dispose();
+        new LoginScreen();
     }
 }
