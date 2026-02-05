@@ -16,22 +16,5 @@ public abstract class User {
 
     public String getUsername() { return username; }
     public String getRole() { return role; }
-}
-
-class Student extends User {
-    public Student(String username, String password) {
-        super(username, password, "Student");
-    }
-}
-
-class Evaluator extends User {
-    public Evaluator(String username, String password) {
-        super(username, password, "Evaluator");
-    }
-}
-
-class Coordinator extends User {
-    public Coordinator(String username, String password) {
-        super(username, password, "Coordinator");
-    }
+    public String toString() { return username; }
 }
