@@ -53,6 +53,10 @@ public class LoginScreen extends JFrame implements ActionListener {
         setVisible(true);
     }
 
+    public static void main(String[] args) {
+        new LoginScreen();
+    }
+
     @Override
     public void actionPerformed(ActionEvent e) {
         String username = userField.getText();
