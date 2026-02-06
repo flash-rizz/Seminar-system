@@ -1,0 +1,135 @@
+@startuml
+skinparam classAttributeIconSize 0
+skinparam monochrome true
+skinparam shadowing false
+
+title Seminar Management System - Class Diagram (code-aligned)
+
+' ===== Domain / Core =====
+abstract class User {
+  - username : String
+  - password : String
+  - role : String
+  + User(username : String, password : String, role : String)
+  + login(inputUser : String, inputPass : String) : boolean
+  + getUsername() : String
+  + getRole() : String
+  + toString() : String
+}
+
+class Student {
+  - submission : Submission
+  + Student(username : String, password : String)
+  + setSubmission(submission : Submission) : void
+  + getSubmission() : Submission
+}
+
+class Evaluator {
+  + Evaluator(username : String, password : String)
+}
+
+class Coordinator {
+  + Coordinator(username : String, password : String)
+}
+
+User <|-- Student
+User <|-- Evaluator
+User <|-- Coordinator
+
+class Submission {
+  - title : String
+  - abstractText : String
+  - supervisor : String
+  - presentationType : String
+  - filePath : String
+  + Submission(title : String, abstractText : String, supervisor : String, presentationType : String, filePath : String)
+  + getTitle() : String
+  + getAbstractText() : String
+  + getSupervisor() : String
+  + getPresentationType() : String
+  + getFilePath() : String
+}
+
+class Session {
+  - date : Date
+  - venue : String
+  - sessionType : String
+  - student : Student
+  - evaluator : Evaluator
+  + Session(date : Date, venue : String, sessionType : String)
+  + getDate() : Date
+  + getVenue() : String
+  + getSessionType() : String
+  + getStudent() : Student
+  + getEvaluator() : Evaluator
+  + setStudent(student : Student) : void
+  + setEvaluator(evaluator : Evaluator) : void
+  + toString() : String
+}
+
+class Evaluation {
+  - student : Student
+  - evaluator : Evaluator
+  - problemClarity : int
+  - methodology : int
+  - results : int
+  - comments : String
+  + Evaluation(student : Student, evaluator : Evaluator, problemClarity : int, methodology : int, results : int, comments : String)
+  + getStudent() : Student
+  + getEvaluator() : Evaluator
+  + getProblemClarity() : int
+  + getMethodology() : int
+  + getResults() : int
+  + getComments() : String
+  + getTotalScore() : double
+  + toString() : String
+}
+
+Student "1" o-- "0..1" Submission : submission
+Session "1" o-- "0..1" Student : assigned
+Session "1" o-- "0..1" Evaluator : assigned
+Evaluation "1" --> "1" Student : student
+Evaluation "1" --> "1" Evaluator : evaluator
+
+' ===== System (in-memory lists) =====
+class SeminarSystem {
+  + {static} users : ArrayList<User>
+  + {static} sessions : ArrayList<Session>
+  + {static} evaluations : ArrayList<Object>
+  + {static} main(args : String[]) : void
+}
+
+note right of SeminarSystem::evaluations
+  Code uses ArrayList<Object>.
+  EvaluatorDashboard stores Evaluation objects here.
+end note
+
+SeminarSystem "1" *-- "0..*" User : users
+SeminarSystem "1" *-- "0..*" Session : sessions
+SeminarSystem "1" *-- "0..*" Evaluation : (stored in evaluations)
+
+' ===== UI (Swing screens) =====
+class LoginScreen
+class StudentDashboard
+class CoordinatorDashboard
+class EvaluatorDashboard
+class RegistrationForm
+
+LoginScreen ..> SeminarSystem : reads users
+LoginScreen ..> StudentDashboard : opens
+LoginScreen ..> CoordinatorDashboard : opens
+LoginScreen ..> EvaluatorDashboard : opens
+StudentDashboard ..> RegistrationForm : opens
+RegistrationForm ..> Submission : creates
+CoordinatorDashboard ..> SeminarSystem : manages sessions/evaluations
+EvaluatorDashboard ..> SeminarSystem : submits evaluations
+
+' ===== Required-by-spec placeholders (not implemented) =====
+class Report <<TODO>>
+class Award <<TODO>>
+
+CoordinatorDashboard ..> Report : generate (TODO)
+CoordinatorDashboard ..> Award : nominate (TODO)
+
+@enduml
+
