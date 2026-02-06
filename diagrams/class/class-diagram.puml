@@ -3,9 +3,7 @@ skinparam classAttributeIconSize 0
 skinparam monochrome true
 skinparam shadowing false
 
-title Seminar Management System - Class Diagram (code-aligned)
-
-' ===== Domain / Core =====
+title Seminar Management System - Class Diagram
 abstract class User {
   - username : String
   - password : String
@@ -91,7 +89,6 @@ Session "1" o-- "0..1" Evaluator : assigned
 Evaluation "1" --> "1" Student : student
 Evaluation "1" --> "1" Evaluator : evaluator
 
-' ===== System (in-memory lists) =====
 class SeminarSystem {
   + {static} users : ArrayList<User>
   + {static} sessions : ArrayList<Session>
@@ -107,7 +104,6 @@ SeminarSystem "1" *-- "0..*" Evaluation : evaluations
 SeminarSystem "1" *-- "0..*" Award : awards
 SeminarSystem "1" *-- "0..*" Report : reports
 
-' ===== UI (Swing screens) =====
 class LoginScreen
 class StudentDashboard
 class CoordinatorDashboard

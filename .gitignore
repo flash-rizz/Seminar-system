@@ -7,3 +7,9 @@
 # OS junk
 .DS_Store
 Thumbs.db
+
+# Generated diagram exports
+diagrams/**/*.png
+
+# Local PlantUML binary
+tools/plantuml.jar
