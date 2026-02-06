@@ -1,0 +1,39 @@
+@startuml
+skinparam monochrome true
+skinparam shadowing false
+
+title Coordinator calculates highest score and top 3 (award nomination)
+
+actor "Coordinator" as coordActor
+participant ":CoordinatorDashboard" as dash
+participant ":SeminarSystem" as sys
+participant "evaluation:Evaluation" as eval
+
+coordActor -> dash : click "Calculate Highest Score"
+activate dash
+dash -> sys : evaluations (read SeminarSystem.evaluations)
+activate sys
+sys --> dash : ArrayList<Object>
+deactivate sys
+
+alt evaluations empty
+  dash -> dash : awardResultLabel.setText("No evaluations available.")
+else evaluations not empty
+  loop for each eval in evaluations
+    dash -> eval : getTotalScore()\n(getStudent())
+    eval --> dash : score + student
+  end
+  dash -> dash : awardResultLabel.setText("Highest score: ...")
+end
+
+coordActor -> dash : click "Show Top 3"
+dash -> sys : evaluations (read + copy)
+activate sys
+sys --> dash : ArrayList<Object>
+deactivate sys
+dash -> dash : sort by score desc
+dash -> dash : JOptionPane.showMessageDialog("Top 3 Rankings: ...")
+
+deactivate dash
+@enduml
+

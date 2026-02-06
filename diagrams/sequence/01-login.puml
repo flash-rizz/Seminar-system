@@ -1,0 +1,58 @@
+@startuml
+skinparam monochrome true
+skinparam shadowing false
+
+title Login and open role dashboard
+
+actor "User" as user
+participant ":LoginScreen" as ui
+participant ":SeminarSystem" as sys
+participant "u:User" as uobj
+participant ":StudentDashboard" as sDash
+participant ":CoordinatorDashboard" as cDash
+participant ":EvaluatorDashboard" as eDash
+
+user -> ui : enterCredentials(username, password)\n(click Login)
+activate ui
+
+ui -> sys : users (read SeminarSystem.users)
+activate sys
+sys --> ui : ArrayList<User>
+deactivate sys
+
+loop for each u in users
+  ui -> uobj : login(username, password)
+  alt match
+    uobj --> ui : true
+    ui -> ui : foundUser = u (stop searching)
+  else no match
+    uobj --> ui : false
+  end
+end
+
+alt foundUser != null
+  ui -> ui : JOptionPane.showMessageDialog("Welcome " + role)
+  ui -> ui : dispose()
+  alt foundUser instanceof Student
+    ui -> sDash : new StudentDashboard((Student)foundUser)
+    activate sDash
+    sDash --> user : show()
+    deactivate sDash
+  else foundUser instanceof Coordinator
+    ui -> cDash : new CoordinatorDashboard()
+    activate cDash
+    cDash --> user : show()
+    deactivate cDash
+  else foundUser instanceof Evaluator
+    ui -> eDash : new EvaluatorDashboard((Evaluator)foundUser)
+    activate eDash
+    eDash --> user : show()
+    deactivate eDash
+  end
+else foundUser == null
+  ui -> ui : JOptionPane.showMessageDialog("Invalid Username or Password")
+end
+
+deactivate ui
+@enduml
+

@@ -1,0 +1,29 @@
+@startuml
+skinparam monochrome true
+skinparam shadowing false
+
+title Coordinator generates final evaluation report (required module; TODO in code)
+
+actor "Coordinator" as coordActor
+participant ":CoordinatorDashboard" as dash
+participant ":SeminarSystem" as sys
+participant "report:Report" as report
+
+coordActor -> dash : click "Generate Report"
+activate dash
+dash -> sys : getSessions() / sessions
+activate sys
+sys --> dash : ArrayList<Session>
+dash -> sys : getEvaluations() / evaluations
+sys --> dash : ArrayList<Evaluation>
+deactivate sys
+
+dash -> report : generateFinalEvaluationReport(sessions, evaluations)
+activate report
+report --> dash : reportData (string/file path)
+deactivate report
+
+dash -> dash : export/save + JOptionPane.showMessageDialog("Report generated")
+deactivate dash
+@enduml
+

@@ -1,0 +1,39 @@
+@startuml
+skinparam monochrome true
+skinparam shadowing false
+
+title Coordinator assigns student and evaluator to a session
+
+actor "Coordinator" as coordActor
+participant ":CoordinatorDashboard" as dash
+participant "session:Session" as session
+participant "student:Student" as student
+participant "evaluator:Evaluator" as evaluator
+
+coordActor -> dash : select session in list\nselect student in combo\n(click "Assign Student")
+activate dash
+dash -> dash : handleAssignStudent()
+dash -> dash : sessionList.getSelectedValue()
+dash -> dash : studentCombo.getSelectedItem()
+alt session == null or student == null
+  dash -> dash : JOptionPane.showMessageDialog("Select a session and a student.")
+else OK
+  dash -> session : setStudent(student)
+  dash -> dash : sessionList.repaint()
+  dash -> dash : JOptionPane.showMessageDialog("Student assigned to session.")
+end
+
+coordActor -> dash : select evaluator in combo\n(click "Assign Evaluator")
+dash -> dash : handleAssignEvaluator()
+dash -> dash : evaluatorCombo.getSelectedItem()
+alt session == null or evaluator == null
+  dash -> dash : JOptionPane.showMessageDialog("Select a session and an evaluator.")
+else OK
+  dash -> session : setEvaluator(evaluator)
+  dash -> dash : sessionList.repaint()
+  dash -> dash : JOptionPane.showMessageDialog("Evaluator assigned to session.")
+end
+
+deactivate dash
+@enduml
+
