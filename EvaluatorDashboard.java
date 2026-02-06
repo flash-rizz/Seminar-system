@@ -7,6 +7,7 @@ public class EvaluatorDashboard extends JFrame {
     private JSlider claritySlider;
     private JSlider methodologySlider;
     private JSlider resultsSlider;
+    private JSlider presentationSlider;
     private JTextArea commentsArea;
     private JLabel totalLabel;
 
@@ -24,7 +25,7 @@ public class EvaluatorDashboard extends JFrame {
     }
 
     private JPanel buildFormPanel() {
-        JPanel panel = new JPanel(new GridLayout(5, 2, 10, 10));
+        JPanel panel = new JPanel(new GridLayout(6, 2, 10, 10));
         panel.setBorder(BorderFactory.createTitledBorder("Evaluation Form"));
 
         panel.add(new JLabel("Select Student:"));
@@ -47,6 +48,10 @@ public class EvaluatorDashboard extends JFrame {
         panel.add(new JLabel("Results (0-10):"));
         resultsSlider = createSlider();
         panel.add(resultsSlider);
+
+        panel.add(new JLabel("Presentation (0-10):"));
+        presentationSlider = createSlider();
+        panel.add(presentationSlider);
 
         panel.add(new JLabel("Comments:"));
         commentsArea = new JTextArea(3, 20);
@@ -86,7 +91,8 @@ public class EvaluatorDashboard extends JFrame {
     }
 
     private void updateTotal() {
-        int total = claritySlider.getValue() + methodologySlider.getValue() + resultsSlider.getValue();
+        int total = claritySlider.getValue() + methodologySlider.getValue()
+                + resultsSlider.getValue() + presentationSlider.getValue();
         totalLabel.setText("Total: " + total);
     }
 
@@ -105,9 +111,10 @@ public class EvaluatorDashboard extends JFrame {
         int clarity = claritySlider.getValue();
         int methodology = methodologySlider.getValue();
         int results = resultsSlider.getValue();
+        int presentation = presentationSlider.getValue();
         String comments = commentsArea.getText().trim();
 
-        Evaluation eval = new Evaluation(st, evaluator, clarity, methodology, results, comments);
+        Evaluation eval = new Evaluation(st, evaluator, clarity, methodology, results, presentation, comments);
         SeminarSystem.evaluations.add(eval);
 
         JOptionPane.showMessageDialog(this, "Evaluation submitted. Total: " + eval.getTotalScore());
@@ -116,6 +123,7 @@ public class EvaluatorDashboard extends JFrame {
         claritySlider.setValue(5);
         methodologySlider.setValue(5);
         resultsSlider.setValue(5);
+        presentationSlider.setValue(5);
         updateTotal();
     }
 

@@ -3,18 +3,24 @@ import java.util.Date;
 
 public class Session {
     private Date date;
+    private String startTime;
+    private String endTime;
     private String venue;
     private String sessionType;
     private Student student;
     private Evaluator evaluator;
 
-    public Session(Date date, String venue, String sessionType) {
+    public Session(Date date, String startTime, String endTime, String venue, String sessionType) {
         this.date = date;
+        this.startTime = startTime;
+        this.endTime = endTime;
         this.venue = venue;
         this.sessionType = sessionType;
     }
 
     public Date getDate() { return date; }
+    public String getStartTime() { return startTime; }
+    public String getEndTime() { return endTime; }
     public String getVenue() { return venue; }
     public String getSessionType() { return sessionType; }
     public Student getStudent() { return student; }
@@ -26,9 +32,10 @@ public class Session {
     public String toString() {
         SimpleDateFormat fmt = new SimpleDateFormat("dd MMM yyyy");
         String dateStr = (date != null) ? fmt.format(date) : "No Date";
+        String timeStr = startTime + "-" + endTime;
         String studentStr = (student != null) ? student.getUsername() : "Unassigned";
         String evaluatorStr = (evaluator != null) ? evaluator.getUsername() : "Unassigned";
-        return dateStr + " | " + sessionType + " | " + venue
+        return dateStr + " | " + timeStr + " | " + sessionType + " | " + venue
                 + " | Student: " + studentStr + " | Evaluator: " + evaluatorStr;
     }
 }

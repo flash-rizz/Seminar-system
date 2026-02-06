@@ -28,6 +28,7 @@ public class StudentDashboard extends JFrame {
                     "\nAbstract: " + s.getAbstractText() +
                     "\nSupervisor: " + s.getSupervisor() +
                     "\nType: " + s.getPresentationType() +
+                    "\nBoard ID: " + (s.getBoardId().isEmpty() ? "Not assigned" : s.getBoardId()) +
                     "\nFile: " + s.getFilePath()
                 );
             }

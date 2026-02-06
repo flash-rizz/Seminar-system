@@ -40,22 +40,30 @@ class Submission {
   - supervisor : String
   - presentationType : String
   - filePath : String
+  - boardId : String
   + Submission(title : String, abstractText : String, supervisor : String, presentationType : String, filePath : String)
   + getTitle() : String
   + getAbstractText() : String
   + getSupervisor() : String
   + getPresentationType() : String
   + getFilePath() : String
+  + getBoardId() : String
+  + setBoardId(boardId : String) : void
+  + isPoster() : boolean
 }
 
 class Session {
   - date : Date
+  - startTime : String
+  - endTime : String
   - venue : String
   - sessionType : String
   - student : Student
   - evaluator : Evaluator
-  + Session(date : Date, venue : String, sessionType : String)
+  + Session(date : Date, startTime : String, endTime : String, venue : String, sessionType : String)
   + getDate() : Date
+  + getStartTime() : String
+  + getEndTime() : String
   + getVenue() : String
   + getSessionType() : String
   + getStudent() : Student
@@ -71,13 +79,15 @@ class Evaluation {
   - problemClarity : int
   - methodology : int
   - results : int
+  - presentation : int
   - comments : String
-  + Evaluation(student : Student, evaluator : Evaluator, problemClarity : int, methodology : int, results : int, comments : String)
+  + Evaluation(student : Student, evaluator : Evaluator, problemClarity : int, methodology : int, results : int, presentation : int, comments : String)
   + getStudent() : Student
   + getEvaluator() : Evaluator
   + getProblemClarity() : int
   + getMethodology() : int
   + getResults() : int
+  + getPresentation() : int
   + getComments() : String
   + getTotalScore() : double
   + toString() : String
@@ -139,6 +149,8 @@ class Report {
   + getGeneratedDate() : Date
   + getContent() : String
   + {static} generate(sessions : ArrayList<Session>, evaluations : ArrayList<Evaluation>, awards : ArrayList<Award>) : Report
+  + exportAsText(filePath : String) : boolean
+  + {static} exportSummaryCsv(filePath : String, evaluations : ArrayList<Evaluation>) : boolean
 }
 
 Award "1" --> "1" Student : winner

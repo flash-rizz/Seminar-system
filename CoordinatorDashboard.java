@@ -2,7 +2,9 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Date;
+import java.io.File;
 
 public class CoordinatorDashboard extends JFrame {
     private DefaultListModel<Session> sessionModel = new DefaultListModel<>();
@@ -12,6 +14,8 @@ public class CoordinatorDashboard extends JFrame {
     private JLabel awardResultLabel = new JLabel("No nomination calculated yet.");
 
     private JSpinner dateSpinner;
+    private JTextField startTimeField;
+    private JTextField endTimeField;
     private JTextField venueField;
     private JComboBox<String> typeCombo;
 
@@ -31,7 +35,7 @@ public class CoordinatorDashboard extends JFrame {
     }
 
     private JPanel buildCreateSessionPanel() {
-        JPanel panel = new JPanel(new GridLayout(2, 4, 10, 5));
+        JPanel panel = new JPanel(new GridLayout(3, 4, 10, 5));
         panel.setBorder(BorderFactory.createTitledBorder("Create Session"));
 
         panel.add(new JLabel("Date:"));
@@ -39,6 +43,14 @@ public class CoordinatorDashboard extends JFrame {
         JSpinner.DateEditor editor = new JSpinner.DateEditor(dateSpinner, "dd MMM yyyy");
         dateSpinner.setEditor(editor);
         panel.add(dateSpinner);
+
+        panel.add(new JLabel("Start Time (HH:mm):"));
+        startTimeField = new JTextField();
+        panel.add(startTimeField);
+
+        panel.add(new JLabel("End Time (HH:mm):"));
+        endTimeField = new JTextField();
+        panel.add(endTimeField);
 
         panel.add(new JLabel("Venue:"));
         venueField = new JTextField();
@@ -61,12 +73,12 @@ public class CoordinatorDashboard extends JFrame {
 
     private JPanel buildAssignPanel() {
         JPanel panel = new JPanel(new BorderLayout(10, 10));
-        panel.setBorder(BorderFactory.createTitledBorder("Assign Student & Evaluator"));
+        panel.setBorder(BorderFactory.createTitledBorder("Assign Student, Evaluator, Poster Board"));
 
         sessionList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         panel.add(new JScrollPane(sessionList), BorderLayout.CENTER);
 
-        JPanel assignControls = new JPanel(new GridLayout(2, 3, 10, 5));
+        JPanel assignControls = new JPanel(new GridLayout(3, 3, 10, 5));
         assignControls.add(new JLabel("Student:"));
         studentCombo = new JComboBox<>();
         assignControls.add(studentCombo);
@@ -81,6 +93,13 @@ public class CoordinatorDashboard extends JFrame {
         assignEvaluatorBtn.addActionListener(e -> handleAssignEvaluator());
         assignControls.add(assignEvaluatorBtn);
 
+        assignControls.add(new JLabel("Poster Board ID:"));
+        JTextField boardIdField = new JTextField();
+        assignControls.add(boardIdField);
+        JButton assignBoardBtn = new JButton("Assign Board ID");
+        assignBoardBtn.addActionListener(e -> handleAssignBoardId(boardIdField.getText().trim()));
+        assignControls.add(assignBoardBtn);
+
         panel.add(assignControls, BorderLayout.SOUTH);
 
         refreshUserLists();
@@ -91,7 +110,7 @@ public class CoordinatorDashboard extends JFrame {
         JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         panel.setBorder(BorderFactory.createTitledBorder("Award Nomination"));
 
-        JButton awardBtn = new JButton("Calculate Highest Score");
+        JButton awardBtn = new JButton("Compute Awards");
         awardBtn.addActionListener(e -> handleAwardNomination());
         panel.add(awardBtn);
         panel.add(awardResultLabel);
@@ -133,18 +152,27 @@ public class CoordinatorDashboard extends JFrame {
 
     private void handleCreateSession(ActionEvent e) {
         Date date = (Date) dateSpinner.getValue();
+        String startTime = startTimeField.getText().trim();
+        String endTime = endTimeField.getText().trim();
         String venue = venueField.getText().trim();
         String type = (String) typeCombo.getSelectedItem();
+
+        if (startTime.isEmpty() || endTime.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Start and end time are required.", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
 
         if (venue.isEmpty()) {
             JOptionPane.showMessageDialog(this, "Venue cannot be empty.", "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
 
-        Session s = new Session(date, venue, type);
+        Session s = new Session(date, startTime, endTime, venue, type);
         SeminarSystem.sessions.add(s);
         sessionModel.addElement(s);
 
+        startTimeField.setText("");
+        endTimeField.setText("");
         venueField.setText("");
         JOptionPane.showMessageDialog(this, "Session created.");
     }
@@ -173,39 +201,84 @@ public class CoordinatorDashboard extends JFrame {
         JOptionPane.showMessageDialog(this, "Evaluator assigned to session.");
     }
 
+    private void handleAssignBoardId(String boardId) {
+        Student st = (Student) studentCombo.getSelectedItem();
+        if (st == null || st.getSubmission() == null) {
+            JOptionPane.showMessageDialog(this, "Select a student with a submission.");
+            return;
+        }
+
+        if (!st.getSubmission().isPoster()) {
+            JOptionPane.showMessageDialog(this, "Board ID can only be assigned to Poster submissions.");
+            return;
+        }
+
+        if (boardId.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Board ID cannot be empty.");
+            return;
+        }
+
+        st.getSubmission().setBoardId(boardId);
+        JOptionPane.showMessageDialog(this, "Board ID assigned to " + st.getUsername() + ".");
+    }
+
     private void handleAwardNomination() {
         if (SeminarSystem.evaluations == null || SeminarSystem.evaluations.isEmpty()) {
             awardResultLabel.setText("No evaluations available.");
             return;
         }
 
-        Evaluation topEval = null;
-        double topScore = -1;
+        Evaluation bestOral = pickTopByType("Oral");
+        Evaluation bestPoster = pickTopByType("Poster");
+        Evaluation peopleChoice = SeminarSystem.evaluations.stream()
+                .max(Comparator.comparingDouble(Evaluation::getPresentation))
+                .orElse(null);
 
-        for (Evaluation eval : SeminarSystem.evaluations) {
-            if (eval == null) {
-                continue;
-            }
-            double score = eval.getTotalScore();
-            if (score > topScore) {
-                topScore = score;
-                topEval = eval;
-            }
+        SeminarSystem.awards.removeIf(a ->
+                "Best Oral".equals(a.getAwardName())
+                        || "Best Poster".equals(a.getAwardName())
+                        || "People's Choice".equals(a.getAwardName()));
+
+        StringBuilder summary = new StringBuilder();
+
+        if (bestOral != null) {
+            SeminarSystem.awards.add(new Award("Best Oral", bestOral.getStudent(), bestOral.getTotalScore()));
+            summary.append("Best Oral: ").append(bestOral.getStudent().getUsername()).append(". ");
         }
 
-        if (topEval == null) {
-            awardResultLabel.setText("Could not read evaluation scores.");
+        if (bestPoster != null) {
+            SeminarSystem.awards.add(new Award("Best Poster", bestPoster.getStudent(), bestPoster.getTotalScore()));
+            summary.append("Best Poster: ").append(bestPoster.getStudent().getUsername()).append(". ");
+        }
+
+        if (peopleChoice != null) {
+            SeminarSystem.awards.add(new Award("People's Choice", peopleChoice.getStudent(), peopleChoice.getPresentation()));
+            summary.append("People's Choice: ").append(peopleChoice.getStudent().getUsername()).append(".");
+        }
+
+        if (summary.length() == 0) {
+            awardResultLabel.setText("Could not calculate awards.");
             return;
         }
 
-        Student winner = topEval.getStudent();
-        String studentName = (winner != null) ? winner.getUsername() : "Unknown Student";
-        Award highestScoreAward = new Award("Best Presenter", winner, topScore);
-        SeminarSystem.awards.removeIf(a -> "Best Presenter".equals(a.getAwardName()));
-        SeminarSystem.awards.add(highestScoreAward);
+        awardResultLabel.setText(summary.toString());
+    }
 
-        if (studentName == null) studentName = "Unknown Student";
-        awardResultLabel.setText("Highest score: " + studentName + " (" + topScore + ")");
+    private Evaluation pickTopByType(String type) {
+        Evaluation top = null;
+        for (Evaluation eval : SeminarSystem.evaluations) {
+            if (eval == null || eval.getStudent() == null || eval.getStudent().getSubmission() == null) {
+                continue;
+            }
+            String submissionType = eval.getStudent().getSubmission().getPresentationType();
+            if (!type.equalsIgnoreCase(submissionType)) {
+                continue;
+            }
+            if (top == null || eval.getTotalScore() > top.getTotalScore()) {
+                top = eval;
+            }
+        }
+        return top;
     }
 
     private void handleShowTop3() {
@@ -252,6 +325,28 @@ public class CoordinatorDashboard extends JFrame {
         scrollPane.setPreferredSize(new Dimension(650, 300));
 
         JOptionPane.showMessageDialog(this, scrollPane, "Final Evaluation Report", JOptionPane.INFORMATION_MESSAGE);
+
+        int choice = JOptionPane.showConfirmDialog(this,
+                "Export report files (TXT and CSV)?",
+                "Export",
+                JOptionPane.YES_NO_OPTION);
+        if (choice == JOptionPane.YES_OPTION) {
+            JFileChooser chooser = new JFileChooser();
+            chooser.setDialogTitle("Choose export folder");
+            chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+            int result = chooser.showSaveDialog(this);
+            if (result == JFileChooser.APPROVE_OPTION) {
+                File dir = chooser.getSelectedFile();
+                boolean txtOk = report.exportAsText(new File(dir, "seminar_report.txt").getAbsolutePath());
+                boolean csvOk = Report.exportSummaryCsv(new File(dir, "seminar_evaluation_summary.csv").getAbsolutePath(),
+                        SeminarSystem.evaluations);
+                if (txtOk && csvOk) {
+                    JOptionPane.showMessageDialog(this, "Report exported successfully.");
+                } else {
+                    JOptionPane.showMessageDialog(this, "Export failed.", "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        }
     }
 
     private void handleLogout() {
