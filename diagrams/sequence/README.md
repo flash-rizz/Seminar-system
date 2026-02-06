@@ -10,5 +10,4 @@ Files:
 - `05-coordinator-assign-session.puml` — coordinator assigns `Student` / `Evaluator` to a `Session`
 - `06-evaluator-submit-evaluation.puml` — evaluator submits an `Evaluation` for a student
 - `07-coordinator-award-nomination.puml` — coordinator calculates highest score / top 3 from `Evaluation`
-- `08-coordinator-generate-report.puml` — report-generation flow (required by spec; not currently implemented in code)
-
+- `08-coordinator-generate-report.puml` — coordinator generates final report from sessions/evaluations/awards

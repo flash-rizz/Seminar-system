@@ -5,8 +5,9 @@ public class SeminarSystem {
     
     public static ArrayList<User> users = new ArrayList<>();
     public static ArrayList<Session> sessions = new ArrayList<>();
-    // Evaluations list is used by Award Nomination (filled by Evaluator module)
-    public static ArrayList<Object> evaluations = new ArrayList<>();
+    public static ArrayList<Evaluation> evaluations = new ArrayList<>();
+    public static ArrayList<Award> awards = new ArrayList<>();
+    public static ArrayList<Report> reports = new ArrayList<>();
     
 
     public static void main(String[] args) {

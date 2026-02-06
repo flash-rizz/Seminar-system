@@ -1,10 +1,8 @@
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
-import java.lang.reflect.Method;
 
 public class CoordinatorDashboard extends JFrame {
     private DefaultListModel<Session> sessionModel = new DefaultListModel<>();
@@ -102,6 +100,10 @@ public class CoordinatorDashboard extends JFrame {
         top3Btn.addActionListener(e -> handleShowTop3());
         panel.add(top3Btn);
 
+        JButton reportBtn = new JButton("Generate Report");
+        reportBtn.addActionListener(e -> handleGenerateReport());
+        panel.add(reportBtn);
+
         JButton logoutBtn = new JButton("Logout");
         logoutBtn.addActionListener(e -> handleLogout());
         panel.add(logoutBtn);
@@ -177,12 +179,14 @@ public class CoordinatorDashboard extends JFrame {
             return;
         }
 
-        Object topEval = null;
+        Evaluation topEval = null;
         double topScore = -1;
 
-        for (Object eval : SeminarSystem.evaluations) {
-            if (eval == null) continue;
-            double score = getScoreFromEvaluation(eval);
+        for (Evaluation eval : SeminarSystem.evaluations) {
+            if (eval == null) {
+                continue;
+            }
+            double score = eval.getTotalScore();
             if (score > topScore) {
                 topScore = score;
                 topEval = eval;
@@ -194,7 +198,12 @@ public class CoordinatorDashboard extends JFrame {
             return;
         }
 
-        String studentName = getStudentNameFromEvaluation(topEval);
+        Student winner = topEval.getStudent();
+        String studentName = (winner != null) ? winner.getUsername() : "Unknown Student";
+        Award highestScoreAward = new Award("Best Presenter", winner, topScore);
+        SeminarSystem.awards.removeIf(a -> "Best Presenter".equals(a.getAwardName()));
+        SeminarSystem.awards.add(highestScoreAward);
+
         if (studentName == null) studentName = "Unknown Student";
         awardResultLabel.setText("Highest score: " + studentName + " (" + topScore + ")");
     }
@@ -205,16 +214,19 @@ public class CoordinatorDashboard extends JFrame {
             return;
         }
 
-        ArrayList<Object> evals = new ArrayList<>(SeminarSystem.evaluations);
-        evals.sort((a, b) -> Double.compare(getScoreFromEvaluation(b), getScoreFromEvaluation(a)));
+        ArrayList<Evaluation> evals = new ArrayList<>(SeminarSystem.evaluations);
+        evals.sort((a, b) -> Double.compare(b.getTotalScore(), a.getTotalScore()));
 
         StringBuilder sb = new StringBuilder("Top 3 Rankings:\n");
         int rank = 1;
-        for (Object eval : evals) {
+        for (Evaluation eval : evals) {
             if (rank > 3) break;
-            double score = getScoreFromEvaluation(eval);
-            if (score < 0) continue;
-            String studentName = getStudentNameFromEvaluation(eval);
+            double score = eval.getTotalScore();
+            if (score < 0) {
+                continue;
+            }
+            Student student = eval.getStudent();
+            String studentName = (student != null) ? student.getUsername() : null;
             if (studentName == null) studentName = "Unknown Student";
             sb.append(rank).append(". ").append(studentName).append(" (").append(score).append(")\n");
             rank++;
@@ -227,38 +239,19 @@ public class CoordinatorDashboard extends JFrame {
         JOptionPane.showMessageDialog(this, sb.toString());
     }
 
-    private double getScoreFromEvaluation(Object eval) {
-        try {
-            Method m = eval.getClass().getMethod("getTotalScore");
-            Object val = m.invoke(eval);
-            return Double.parseDouble(val.toString());
-        } catch (Exception ex) {
-            try {
-                Method m = eval.getClass().getMethod("getTotal");
-                Object val = m.invoke(eval);
-                return Double.parseDouble(val.toString());
-            } catch (Exception ex2) {
-                return -1;
-            }
-        }
-    }
+    private void handleGenerateReport() {
+        Report report = Report.generate(SeminarSystem.sessions, SeminarSystem.evaluations, SeminarSystem.awards);
+        SeminarSystem.reports.add(report);
 
-    private String getStudentNameFromEvaluation(Object eval) {
-        try {
-            Method m = eval.getClass().getMethod("getStudent");
-            Object st = m.invoke(eval);
-            if (st instanceof Student) {
-                return ((Student) st).getUsername();
-            }
-            if (st != null) {
-                Method m2 = st.getClass().getMethod("getUsername");
-                Object name = m2.invoke(st);
-                return String.valueOf(name);
-            }
-        } catch (Exception ex) {
-            return null;
-        }
-        return null;
+        JTextArea reportArea = new JTextArea(report.getContent());
+        reportArea.setEditable(false);
+        reportArea.setLineWrap(true);
+        reportArea.setWrapStyleWord(true);
+
+        JScrollPane scrollPane = new JScrollPane(reportArea);
+        scrollPane.setPreferredSize(new Dimension(650, 300));
+
+        JOptionPane.showMessageDialog(this, scrollPane, "Final Evaluation Report", JOptionPane.INFORMATION_MESSAGE);
     }
 
     private void handleLogout() {

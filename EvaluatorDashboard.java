@@ -120,9 +120,7 @@ public class EvaluatorDashboard extends JFrame {
     }
 
     private boolean hasAlreadyEvaluated(Evaluator evaluator, Student student) {
-        for (Object obj : SeminarSystem.evaluations) {
-            if (!(obj instanceof Evaluation)) continue;
-            Evaluation eval = (Evaluation) obj;
+        for (Evaluation eval : SeminarSystem.evaluations) {
             if (eval.getEvaluator() == evaluator && eval.getStudent() == student) {
                 return true;
             }

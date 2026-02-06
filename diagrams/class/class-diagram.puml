@@ -95,18 +95,17 @@ Evaluation "1" --> "1" Evaluator : evaluator
 class SeminarSystem {
   + {static} users : ArrayList<User>
   + {static} sessions : ArrayList<Session>
-  + {static} evaluations : ArrayList<Object>
+  + {static} evaluations : ArrayList<Evaluation>
+  + {static} awards : ArrayList<Award>
+  + {static} reports : ArrayList<Report>
   + {static} main(args : String[]) : void
 }
 
-note right of SeminarSystem::evaluations
-  Code uses ArrayList<Object>.
-  EvaluatorDashboard stores Evaluation objects here.
-end note
-
 SeminarSystem "1" *-- "0..*" User : users
 SeminarSystem "1" *-- "0..*" Session : sessions
-SeminarSystem "1" *-- "0..*" Evaluation : (stored in evaluations)
+SeminarSystem "1" *-- "0..*" Evaluation : evaluations
+SeminarSystem "1" *-- "0..*" Award : awards
+SeminarSystem "1" *-- "0..*" Report : reports
 
 ' ===== UI (Swing screens) =====
 class LoginScreen
@@ -121,15 +120,33 @@ LoginScreen ..> CoordinatorDashboard : opens
 LoginScreen ..> EvaluatorDashboard : opens
 StudentDashboard ..> RegistrationForm : opens
 RegistrationForm ..> Submission : creates
-CoordinatorDashboard ..> SeminarSystem : manages sessions/evaluations
+CoordinatorDashboard ..> SeminarSystem : manages sessions/evaluations/awards/reports
 EvaluatorDashboard ..> SeminarSystem : submits evaluations
 
-' ===== Required-by-spec placeholders (not implemented) =====
-class Report <<TODO>>
-class Award <<TODO>>
+class Award {
+  - awardName : String
+  - winner : Student
+  - score : double
+  - awardedAt : Date
+  + Award(awardName : String, winner : Student, score : double)
+  + getAwardName() : String
+  + getWinner() : Student
+  + getScore() : double
+  + getAwardedAt() : Date
+  + toString() : String
+}
 
-CoordinatorDashboard ..> Report : generate (TODO)
-CoordinatorDashboard ..> Award : nominate (TODO)
+class Report {
+  - generatedDate : Date
+  - content : String
+  + Report(content : String)
+  + getGeneratedDate() : Date
+  + getContent() : String
+  + {static} generate(sessions : ArrayList<Session>, evaluations : ArrayList<Evaluation>, awards : ArrayList<Award>) : Report
+}
+
+Award "1" --> "1" Student : winner
+CoordinatorDashboard ..> Award : creates
+CoordinatorDashboard ..> Report : generates
 
 @enduml
-

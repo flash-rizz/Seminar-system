@@ -2,7 +2,7 @@
 skinparam monochrome true
 skinparam shadowing false
 
-title Coordinator generates final evaluation report (required module; TODO in code)
+title Coordinator generates final evaluation report
 
 actor "Coordinator" as coordActor
 participant ":CoordinatorDashboard" as dash
@@ -16,14 +16,16 @@ activate sys
 sys --> dash : ArrayList<Session>
 dash -> sys : getEvaluations() / evaluations
 sys --> dash : ArrayList<Evaluation>
+dash -> sys : getAwards() / awards
+sys --> dash : ArrayList<Award>
 deactivate sys
 
-dash -> report : generateFinalEvaluationReport(sessions, evaluations)
+dash -> report : Report.generate(sessions, evaluations, awards)
 activate report
 report --> dash : reportData (string/file path)
 deactivate report
 
-dash -> dash : export/save + JOptionPane.showMessageDialog("Report generated")
+dash -> sys : reports.add(report)
+dash -> dash : JOptionPane.showMessageDialog(report content)
 deactivate dash
 @enduml
-

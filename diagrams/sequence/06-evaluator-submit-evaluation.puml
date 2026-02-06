@@ -28,7 +28,7 @@ alt student == null
 else student selected
   dash -> sys : evaluations (read SeminarSystem.evaluations)
   activate sys
-  sys --> dash : ArrayList<Object>
+  sys --> dash : ArrayList<Evaluation>
   deactivate sys
   dash -> dash : hasAlreadyEvaluated(evaluator, student)\n(loop inside)
 
@@ -47,4 +47,3 @@ end
 
 deactivate dash
 @enduml
-
