@@ -12,6 +12,7 @@ public class CoordinatorDashboard extends JFrame {
     private JLabel awardResultLabel = new JLabel("No nomination calculated yet.");
 
     private JSpinner dateSpinner;
+    private JTextField timeSlotField;
     private JTextField venueField;
     private JComboBox<String> typeCombo;
 
@@ -31,7 +32,7 @@ public class CoordinatorDashboard extends JFrame {
     }
 
     private JPanel buildCreateSessionPanel() {
-        JPanel panel = new JPanel(new GridLayout(2, 4, 10, 5));
+        JPanel panel = new JPanel(new GridLayout(2, 5, 10, 5));
         panel.setBorder(BorderFactory.createTitledBorder("Create Session"));
 
         panel.add(new JLabel("Date:"));
@@ -39,6 +40,10 @@ public class CoordinatorDashboard extends JFrame {
         JSpinner.DateEditor editor = new JSpinner.DateEditor(dateSpinner, "dd MMM yyyy");
         dateSpinner.setEditor(editor);
         panel.add(dateSpinner);
+
+        panel.add(new JLabel("Time Slot:"));
+        timeSlotField = new JTextField();
+        panel.add(timeSlotField);
 
         panel.add(new JLabel("Venue:"));
         venueField = new JTextField();
@@ -91,7 +96,7 @@ public class CoordinatorDashboard extends JFrame {
         JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         panel.setBorder(BorderFactory.createTitledBorder("Award Nomination"));
 
-        JButton awardBtn = new JButton("Calculate Highest Score");
+        JButton awardBtn = new JButton("Compute Awards");
         awardBtn.addActionListener(e -> handleAwardNomination());
         panel.add(awardBtn);
         panel.add(awardResultLabel);
@@ -103,6 +108,10 @@ public class CoordinatorDashboard extends JFrame {
         JButton reportBtn = new JButton("Generate Report");
         reportBtn.addActionListener(e -> handleGenerateReport());
         panel.add(reportBtn);
+
+        JButton exportBtn = new JButton("Export Report");
+        exportBtn.addActionListener(e -> handleExportReport());
+        panel.add(exportBtn);
 
         JButton logoutBtn = new JButton("Logout");
         logoutBtn.addActionListener(e -> handleLogout());
@@ -133,18 +142,25 @@ public class CoordinatorDashboard extends JFrame {
 
     private void handleCreateSession(ActionEvent e) {
         Date date = (Date) dateSpinner.getValue();
+        String timeSlot = timeSlotField.getText().trim();
         String venue = venueField.getText().trim();
         String type = (String) typeCombo.getSelectedItem();
+
+        if (timeSlot.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Time slot cannot be empty.", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
 
         if (venue.isEmpty()) {
             JOptionPane.showMessageDialog(this, "Venue cannot be empty.", "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
 
-        Session s = new Session(date, venue, type);
+        Session s = new Session(date, timeSlot, venue, type);
         SeminarSystem.sessions.add(s);
         sessionModel.addElement(s);
 
+        timeSlotField.setText("");
         venueField.setText("");
         JOptionPane.showMessageDialog(this, "Session created.");
     }
@@ -179,33 +195,24 @@ public class CoordinatorDashboard extends JFrame {
             return;
         }
 
-        Evaluation topEval = null;
-        double topScore = -1;
+        SeminarSystem.awards.removeIf(a ->
+                "Best Oral".equals(a.getAwardName())
+                        || "Best Poster".equals(a.getAwardName())
+                        || "People's Choice".equals(a.getAwardName()));
 
-        for (Evaluation eval : SeminarSystem.evaluations) {
-            if (eval == null) {
-                continue;
-            }
-            double score = eval.getTotalScore();
-            if (score > topScore) {
-                topScore = score;
-                topEval = eval;
-            }
-        }
+        Award bestOral = computeBestAward("Oral", "Best Oral");
+        Award bestPoster = computeBestAward("Poster", "Best Poster");
+        Award peopleChoice = computePeoplesChoice();
 
-        if (topEval == null) {
-            awardResultLabel.setText("Could not read evaluation scores.");
-            return;
-        }
+        if (bestOral != null) SeminarSystem.awards.add(bestOral);
+        if (bestPoster != null) SeminarSystem.awards.add(bestPoster);
+        if (peopleChoice != null) SeminarSystem.awards.add(peopleChoice);
 
-        Student winner = topEval.getStudent();
-        String studentName = (winner != null) ? winner.getUsername() : "Unknown Student";
-        Award highestScoreAward = new Award("Best Presenter", winner, topScore);
-        SeminarSystem.awards.removeIf(a -> "Best Presenter".equals(a.getAwardName()));
-        SeminarSystem.awards.add(highestScoreAward);
-
-        if (studentName == null) studentName = "Unknown Student";
-        awardResultLabel.setText("Highest score: " + studentName + " (" + topScore + ")");
+        StringBuilder sb = new StringBuilder("Awards computed:");
+        if (bestOral != null) sb.append(" Best Oral -> ").append(bestOral.getWinner().getUsername());
+        if (bestPoster != null) sb.append(" | Best Poster -> ").append(bestPoster.getWinner().getUsername());
+        if (peopleChoice != null) sb.append(" | People's Choice -> ").append(peopleChoice.getWinner().getUsername());
+        awardResultLabel.setText(sb.toString());
     }
 
     private void handleShowTop3() {
@@ -214,18 +221,18 @@ public class CoordinatorDashboard extends JFrame {
             return;
         }
 
-        ArrayList<Evaluation> evals = new ArrayList<>(SeminarSystem.evaluations);
-        evals.sort((a, b) -> Double.compare(b.getTotalScore(), a.getTotalScore()));
+        ArrayList<SubmissionScore> scores = computeAverageScores();
+        scores.sort((a, b) -> Double.compare(b.averageScore, a.averageScore));
 
         StringBuilder sb = new StringBuilder("Top 3 Rankings:\n");
         int rank = 1;
-        for (Evaluation eval : evals) {
+        for (SubmissionScore sc : scores) {
             if (rank > 3) break;
-            double score = eval.getTotalScore();
+            double score = sc.averageScore;
             if (score < 0) {
                 continue;
             }
-            Student student = eval.getStudent();
+            Student student = sc.submission.getStudent();
             String studentName = (student != null) ? student.getUsername() : null;
             if (studentName == null) studentName = "Unknown Student";
             sb.append(rank).append(". ").append(studentName).append(" (").append(score).append(")\n");
@@ -252,6 +259,99 @@ public class CoordinatorDashboard extends JFrame {
         scrollPane.setPreferredSize(new Dimension(650, 300));
 
         JOptionPane.showMessageDialog(this, scrollPane, "Final Evaluation Report", JOptionPane.INFORMATION_MESSAGE);
+    }
+
+    private void handleExportReport() {
+        if (SeminarSystem.reports.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Generate a report before exporting.");
+            return;
+        }
+
+        Report report = SeminarSystem.reports.get(SeminarSystem.reports.size() - 1);
+        JFileChooser chooser = new JFileChooser();
+        chooser.setSelectedFile(new java.io.File("seminar_report.txt"));
+        int result = chooser.showSaveDialog(this);
+        if (result != JFileChooser.APPROVE_OPTION) {
+            return;
+        }
+
+        try (java.io.FileWriter writer = new java.io.FileWriter(chooser.getSelectedFile())) {
+            writer.write(report.getContent());
+            JOptionPane.showMessageDialog(this, "Report exported successfully.");
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, "Failed to export report: " + ex.getMessage());
+        }
+    }
+
+    private static class SubmissionScore {
+        private final Submission submission;
+        private final double averageScore;
+        private final int totalVotes;
+
+        private SubmissionScore(Submission submission, double averageScore, int totalVotes) {
+            this.submission = submission;
+            this.averageScore = averageScore;
+            this.totalVotes = totalVotes;
+        }
+    }
+
+    private ArrayList<SubmissionScore> computeAverageScores() {
+        ArrayList<SubmissionScore> results = new ArrayList<>();
+        java.util.Map<Session, java.util.ArrayList<Evaluation>> map = new java.util.HashMap<>();
+
+        for (Evaluation eval : SeminarSystem.evaluations) {
+            if (eval == null || eval.getSession() == null) continue;
+            map.computeIfAbsent(eval.getSession(), k -> new java.util.ArrayList<>()).add(eval);
+        }
+
+        for (java.util.Map.Entry<Session, java.util.ArrayList<Evaluation>> entry : map.entrySet()) {
+            Session session = entry.getKey();
+            Student student = session.getStudent();
+            if (student == null) continue;
+            Submission submission = student.getSubmissionForSession(session);
+            if (submission == null) continue;
+
+            double total = 0;
+            int votes = 0;
+            for (Evaluation eval : entry.getValue()) {
+                total += eval.getTotalScore();
+                if (eval.isPeoplesChoiceVote()) {
+                    votes++;
+                }
+            }
+            double avg = entry.getValue().isEmpty() ? 0 : total / entry.getValue().size();
+            results.add(new SubmissionScore(submission, avg, votes));
+        }
+        return results;
+    }
+
+    private Award computeBestAward(String presentationType, String awardName) {
+        ArrayList<SubmissionScore> scores = computeAverageScores();
+        SubmissionScore best = null;
+        for (SubmissionScore sc : scores) {
+            Submission sub = sc.submission;
+            if (sub == null) continue;
+            if (!presentationType.equalsIgnoreCase(sub.getPresentationType())) continue;
+            if (best == null || sc.averageScore > best.averageScore) {
+                best = sc;
+            }
+        }
+        if (best == null) return null;
+        return new Award(awardName, best.submission.getStudent(), best.averageScore);
+    }
+
+    private Award computePeoplesChoice() {
+        ArrayList<SubmissionScore> scores = computeAverageScores();
+        SubmissionScore best = null;
+        for (SubmissionScore sc : scores) {
+            if (best == null
+                    || sc.totalVotes > best.totalVotes
+                    || (sc.totalVotes == best.totalVotes && sc.averageScore > best.averageScore)) {
+                best = sc;
+            }
+        }
+        if (best == null) return null;
+        return new Award("People's Choice", best.submission.getStudent(), best.totalVotes);
     }
 
     private void handleLogout() {

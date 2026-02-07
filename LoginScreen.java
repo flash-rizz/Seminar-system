@@ -5,6 +5,7 @@ import java.awt.event.*;
 public class LoginScreen extends JFrame implements ActionListener {
     JTextField userField;
     JPasswordField passField;
+    JComboBox<String> roleBox;
     JButton btnLogin;
 
     public LoginScreen() {
@@ -26,7 +27,7 @@ public class LoginScreen extends JFrame implements ActionListener {
 
         JPanel center = new JPanel();
         center.setBorder(BorderFactory.createEmptyBorder(10, 40, 10, 40));
-        center.setLayout(new GridLayout(2, 2, 8, 8));
+        center.setLayout(new GridLayout(3, 2, 8, 8));
 
         JLabel userLabel = new JLabel("Username");
         userLabel.setFont(new Font("Segoe UI", Font.PLAIN, 13));
@@ -36,10 +37,16 @@ public class LoginScreen extends JFrame implements ActionListener {
         passLabel.setFont(new Font("Segoe UI", Font.PLAIN, 13));
         passField = new JPasswordField();
 
+        JLabel roleLabel = new JLabel("Role");
+        roleLabel.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        roleBox = new JComboBox<>(new String[] { "Any", "Student", "Evaluator", "Coordinator" });
+
         center.add(userLabel);
         center.add(userField);
         center.add(passLabel);
         center.add(passField);
+        center.add(roleLabel);
+        center.add(roleBox);
         add(center, BorderLayout.CENTER);
 
         JPanel footer = new JPanel(new FlowLayout(FlowLayout.CENTER));
@@ -65,7 +72,9 @@ public class LoginScreen extends JFrame implements ActionListener {
         User foundUser = null;
 
         for (User u : SeminarSystem.users) {
-            if (u.login(username, password)) {
+            boolean roleMatches = "Any".equals(roleBox.getSelectedItem().toString())
+                    || u.getRole().equalsIgnoreCase(roleBox.getSelectedItem().toString());
+            if (roleMatches && u.login(username, password)) {
                 foundUser = u;
                 break;
             }

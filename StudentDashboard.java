@@ -15,35 +15,75 @@ public class StudentDashboard extends JFrame {
         JButton registerBtn = new JButton("Register Presentation");
         registerBtn.addActionListener(e -> new RegistrationForm(student));
 
-        JButton viewBtn = new JButton("View My Submission");
-        JButton logoutBtn = new JButton("Logout");
+        JButton viewBtn = new JButton("View My Submissions");
 
         viewBtn.addActionListener(e -> {
-            Submission s = student.getSubmission();
+            java.util.ArrayList<Submission> submissions = student.getSubmissions();
 
-            if (s == null) {
-                JOptionPane.showMessageDialog(this, "No submission yet!");
-            } else {
-                JOptionPane.showMessageDialog(this,
-                    "Title: " + s.getTitle() +
-                    "\nAbstract: " + s.getAbstractText() +
-                    "\nSupervisor: " + s.getSupervisor() +
-                    "\nType: " + s.getPresentationType() +
-                    "\nFile: " + s.getFilePath()
-                );
+            if (submissions.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "No submissions yet!");
+                return;
             }
+
+            StringBuilder sb = new StringBuilder("My Submissions:\n");
+            int idx = 1;
+            for (Submission s : submissions) {
+                String boardId = s.getBoardId();
+                if (boardId == null || boardId.trim().isEmpty()) {
+                    boardId = "N/A";
+                }
+                String sessionInfo = (s.getSession() != null) ? s.getSession().toString() : "No session assigned";
+                sb.append(idx++).append(". ").append(sessionInfo).append("\n");
+                sb.append("   Title: ").append(s.getTitle()).append("\n");
+                sb.append("   Type: ").append(s.getPresentationType()).append("\n");
+                sb.append("   Supervisor: ").append(s.getSupervisor()).append("\n");
+                sb.append("   Board ID: ").append(boardId).append("\n");
+                sb.append("   File: ").append(s.getFilePath()).append("\n\n");
+            }
+
+            JOptionPane.showMessageDialog(this, sb.toString());
         });
 
-        logoutBtn.addActionListener(e -> {
-            dispose();
-            new LoginScreen();
-        });
+        JButton sessionBtn = new JButton("View My Sessions");
+        sessionBtn.addActionListener(e -> showAssignedSessions());
 
-        setLayout(new GridLayout(3,1));
+        JButton logoutBtn = new JButton("Logout");
+        logoutBtn.addActionListener(e -> handleLogout());
+
+        setLayout(new GridLayout(4,1));
         add(registerBtn);
         add(viewBtn);
+        add(sessionBtn);
         add(logoutBtn);
 
         setVisible(true);
+    }
+
+    private void showAssignedSessions() {
+        java.util.ArrayList<Session> assignedSessions = new java.util.ArrayList<>();
+        for (Session s : SeminarSystem.sessions) {
+            if (s.getStudent() == student) {
+                assignedSessions.add(s);
+            }
+        }
+
+        if (assignedSessions.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "No session assigned yet.");
+            return;
+        }
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("Assigned Sessions:\n");
+        int idx = 1;
+        for (Session s : assignedSessions) {
+            sb.append(idx++).append(". ").append(s.toString()).append("\n");
+        }
+
+        JOptionPane.showMessageDialog(this, sb.toString());
+    }
+
+    private void handleLogout() {
+        this.dispose();
+        new LoginScreen();
     }
 }
