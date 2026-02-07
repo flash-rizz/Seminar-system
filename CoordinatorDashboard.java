@@ -9,7 +9,7 @@ public class CoordinatorDashboard extends JFrame {
     private JList<Session> sessionList = new JList<>(sessionModel);
     private JComboBox<Student> studentCombo;
     private JComboBox<Evaluator> evaluatorCombo;
-    private JLabel awardResultLabel = new JLabel("No nomination calculated yet.");
+    private JTextArea awardResultArea = new JTextArea(2, 60);
 
     private JSpinner dateSpinner;
     private JTextField timeSlotField;
@@ -93,29 +93,40 @@ public class CoordinatorDashboard extends JFrame {
     }
 
     private JPanel buildAwardPanel() {
-        JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        panel.setBorder(BorderFactory.createTitledBorder("Award Nomination"));
+        JPanel panel = new JPanel(new BorderLayout(10, 5));
+        panel.setBorder(BorderFactory.createTitledBorder("Award & Reports"));
+
+        JPanel buttonRow = new JPanel(new FlowLayout(FlowLayout.LEFT));
 
         JButton awardBtn = new JButton("Compute Awards");
         awardBtn.addActionListener(e -> handleAwardNomination());
-        panel.add(awardBtn);
-        panel.add(awardResultLabel);
+        buttonRow.add(awardBtn);
 
         JButton top3Btn = new JButton("Show Top 3");
         top3Btn.addActionListener(e -> handleShowTop3());
-        panel.add(top3Btn);
+        buttonRow.add(top3Btn);
 
         JButton reportBtn = new JButton("Generate Report");
         reportBtn.addActionListener(e -> handleGenerateReport());
-        panel.add(reportBtn);
+        buttonRow.add(reportBtn);
 
         JButton exportBtn = new JButton("Export Report");
         exportBtn.addActionListener(e -> handleExportReport());
-        panel.add(exportBtn);
+        buttonRow.add(exportBtn);
 
         JButton logoutBtn = new JButton("Logout");
         logoutBtn.addActionListener(e -> handleLogout());
-        panel.add(logoutBtn);
+        buttonRow.add(logoutBtn);
+
+        awardResultArea.setEditable(false);
+        awardResultArea.setLineWrap(true);
+        awardResultArea.setWrapStyleWord(true);
+        awardResultArea.setText("No nomination calculated yet.");
+        JScrollPane resultScroll = new JScrollPane(awardResultArea);
+        resultScroll.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 0));
+
+        panel.add(buttonRow, BorderLayout.NORTH);
+        panel.add(resultScroll, BorderLayout.CENTER);
 
         return panel;
     }
@@ -191,7 +202,7 @@ public class CoordinatorDashboard extends JFrame {
 
     private void handleAwardNomination() {
         if (SeminarSystem.evaluations == null || SeminarSystem.evaluations.isEmpty()) {
-            awardResultLabel.setText("No evaluations available.");
+            awardResultArea.setText("No evaluations available.");
             return;
         }
 
@@ -212,7 +223,7 @@ public class CoordinatorDashboard extends JFrame {
         if (bestOral != null) sb.append(" Best Oral -> ").append(bestOral.getWinner().getUsername());
         if (bestPoster != null) sb.append(" | Best Poster -> ").append(bestPoster.getWinner().getUsername());
         if (peopleChoice != null) sb.append(" | People's Choice -> ").append(peopleChoice.getWinner().getUsername());
-        awardResultLabel.setText(sb.toString());
+        awardResultArea.setText(sb.toString());
     }
 
     private void handleShowTop3() {
