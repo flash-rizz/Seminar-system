@@ -1,0 +1,40 @@
+@startuml
+skinparam monochrome true
+skinparam shadowing false
+
+title Coordinator generates and exports final report
+
+actor "Coordinator" as coordActor
+participant ":CoordinatorDashboard" as dash
+participant ":SeminarSystem" as sys
+participant "report:Report" as report
+
+coordActor -> dash : click "Generate Report"
+activate dash
+dash -> sys : getSessions() / sessions
+activate sys
+sys --> dash : ArrayList<Session>
+dash -> sys : getEvaluations() / evaluations
+sys --> dash : ArrayList<Evaluation>
+dash -> sys : getAwards() / awards
+sys --> dash : ArrayList<Award>
+deactivate sys
+
+dash -> report : Report.generate(sessions, evaluations, awards)
+activate report
+report --> dash : reportData (string/file path)
+deactivate report
+
+dash -> sys : reports.add(report)
+dash -> dash : JOptionPane.showMessageDialog(report content)
+
+coordActor -> dash : click "Export Report"
+dash -> dash : choose file path (JFileChooser)
+alt approved
+  dash -> dash : FileWriter.write(report.getContent())
+  dash -> dash : JOptionPane.showMessageDialog("Report exported successfully.")
+else cancelled
+  dash -> dash : return
+end
+deactivate dash
+@enduml

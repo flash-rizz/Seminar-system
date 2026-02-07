@@ -1,3 +1,3 @@
-# Class Diagram (PNG)
+# Class Diagram (PlantUML + PNG)
 
-`class-diagram.png` reflects the current `.java` classes in this repo.
+`class-diagram.puml` and `class-diagram.png` reflect the current `.java` classes in this repo.

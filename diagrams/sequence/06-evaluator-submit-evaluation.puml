@@ -1,0 +1,61 @@
+@startuml
+skinparam monochrome true
+skinparam shadowing false
+
+title Evaluator submits an evaluation for a session
+
+actor "Evaluator" as evalActor
+participant ":EvaluatorDashboard" as dash
+participant ":SeminarSystem" as sys
+participant "session:Session" as session
+participant "student:Student" as student
+participant "evaluator:Evaluator" as evaluator
+participant "evaluation:Evaluation" as evaluation
+
+evalActor -> dash : select session + set sliders\n+ comments + (optional) People's Choice
+activate dash
+
+opt (optional) click "Calculate Total"
+  evalActor -> dash : click "Calculate Total"
+  dash -> dash : updateTotal()
+  dash -> dash : totalLabel.setText("Total: ...")
+end
+
+evalActor -> dash : click "Submit Evaluation"
+dash -> dash : handleSubmit(evaluator)
+dash -> dash : sessionCombo.getSelectedItem()
+alt session == null
+  dash -> dash : JOptionPane.showMessageDialog("Please select a session.")
+else session selected
+  dash -> session : getStudent()
+  session --> dash : student
+  alt student == null
+    dash -> dash : JOptionPane.showMessageDialog("Selected session has no student.")
+  else student present
+    dash -> student : getSubmissionForSession(session)
+    alt no submission
+      dash -> dash : JOptionPane.showMessageDialog("No submission for this session.")
+    else ok
+      dash -> sys : evaluations (read SeminarSystem.evaluations)
+      activate sys
+      sys --> dash : ArrayList<Evaluation>
+      deactivate sys
+      dash -> dash : hasAlreadyEvaluated(evaluator, student, session)\n(loop inside)
+
+      alt duplicate
+        dash -> dash : JOptionPane.showMessageDialog("You have already evaluated this student.")
+      else not duplicate
+        dash -> evaluation : new Evaluation(student, evaluator, session,\nclarity, methodology, results,\npresentation, comments, peoplesChoice)
+        dash -> sys : evaluations.add(evaluation)
+        activate sys
+        sys --> dash : ok
+        deactivate sys
+        dash -> dash : JOptionPane.showMessageDialog("Evaluation submitted. Total: " + evaluation.getTotalScore())
+        dash -> dash : reset fields + updateTotal()
+      end
+    end
+  end
+end
+
+deactivate dash
+@enduml

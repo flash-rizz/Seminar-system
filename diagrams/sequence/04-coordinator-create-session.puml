@@ -1,0 +1,35 @@
+@startuml
+skinparam monochrome true
+skinparam shadowing false
+
+title Coordinator creates a session (with time slot)
+
+actor "Coordinator" as coordActor
+participant ":CoordinatorDashboard" as dash
+participant ":SeminarSystem" as sys
+participant "s:Session" as session
+
+coordActor -> dash : enter date, time slot,\nvenue, type\n(click "Create Session")
+activate dash
+
+dash -> dash : handleCreateSession(e)
+dash -> dash : timeSlotField.getText().trim()\nvenueField.getText().trim()
+alt time slot empty
+  dash -> dash : JOptionPane.showMessageDialog("Time slot cannot be empty")
+else time slot OK
+  alt venue empty
+    dash -> dash : JOptionPane.showMessageDialog("Venue cannot be empty")
+  else venue OK
+    dash -> session : new Session(date, timeSlot, venue, type)
+    dash -> sys : sessions.add(session)
+    activate sys
+    sys --> dash : ok
+    deactivate sys
+    dash -> dash : sessionModel.addElement(session)
+    dash -> dash : venueField.setText("")
+    dash -> dash : JOptionPane.showMessageDialog("Session created.")
+  end
+end
+
+deactivate dash
+@enduml

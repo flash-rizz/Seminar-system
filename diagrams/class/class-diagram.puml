@@ -1,0 +1,165 @@
+@startuml
+skinparam classAttributeIconSize 0
+skinparam monochrome true
+skinparam shadowing false
+
+title Seminar Management System - Class Diagram
+abstract class User {
+  - username : String
+  - password : String
+  - role : String
+  + User(username : String, password : String, role : String)
+  + login(inputUser : String, inputPass : String) : boolean
+  + getUsername() : String
+  + getRole() : String
+  + toString() : String
+}
+
+class Student {
+  - submissions : ArrayList<Submission>
+  + Student(username : String, password : String)
+  + addSubmission(submission : Submission) : void
+  + getSubmissions() : ArrayList<Submission>
+  + getSubmissionForSession(session : Session) : Submission
+}
+
+class Evaluator {
+  + Evaluator(username : String, password : String)
+}
+
+class Coordinator {
+  + Coordinator(username : String, password : String)
+}
+
+User <|-- Student
+User <|-- Evaluator
+User <|-- Coordinator
+
+class Submission {
+  - student : Student
+  - title : String
+  - abstractText : String
+  - supervisor : String
+  - presentationType : String
+  - filePath : String
+  - boardId : String
+  - session : Session
+  + Submission(student : Student, title : String, abstractText : String, supervisor : String, presentationType : String, filePath : String, boardId : String, session : Session)
+  + getStudent() : Student
+  + getTitle() : String
+  + getAbstractText() : String
+  + getSupervisor() : String
+  + getPresentationType() : String
+  + getFilePath() : String
+  + getBoardId() : String
+  + getSession() : Session
+}
+
+class Session {
+  - date : Date
+  - timeSlot : String
+  - venue : String
+  - sessionType : String
+  - student : Student
+  - evaluator : Evaluator
+  + Session(date : Date, timeSlot : String, venue : String, sessionType : String)
+  + getDate() : Date
+  + getTimeSlot() : String
+  + getVenue() : String
+  + getSessionType() : String
+  + getStudent() : Student
+  + getEvaluator() : Evaluator
+  + setStudent(student : Student) : void
+  + setEvaluator(evaluator : Evaluator) : void
+  + toString() : String
+}
+
+class Evaluation {
+  - student : Student
+  - evaluator : Evaluator
+  - session : Session
+  - problemClarity : int
+  - methodology : int
+  - results : int
+  - presentation : int
+  - comments : String
+  - peoplesChoiceVote : boolean
+  + Evaluation(student : Student, evaluator : Evaluator, session : Session, problemClarity : int, methodology : int, results : int, presentation : int, comments : String, peoplesChoiceVote : boolean)
+  + getStudent() : Student
+  + getEvaluator() : Evaluator
+  + getSession() : Session
+  + getProblemClarity() : int
+  + getMethodology() : int
+  + getResults() : int
+  + getPresentation() : int
+  + getComments() : String
+  + isPeoplesChoiceVote() : boolean
+  + getTotalScore() : double
+  + toString() : String
+}
+
+Student "1" o-- "0..*" Submission : submissions
+Submission "1" --> "1" Session : session
+Session "1" o-- "0..1" Student : assigned
+Session "1" o-- "0..1" Evaluator : assigned
+Evaluation "1" --> "1" Student : student
+Evaluation "1" --> "1" Evaluator : evaluator
+Evaluation "1" --> "1" Session : session
+
+class SeminarSystem {
+  + {static} users : ArrayList<User>
+  + {static} sessions : ArrayList<Session>
+  + {static} evaluations : ArrayList<Evaluation>
+  + {static} awards : ArrayList<Award>
+  + {static} reports : ArrayList<Report>
+  + {static} main(args : String[]) : void
+}
+
+SeminarSystem "1" *-- "0..*" User : users
+SeminarSystem "1" *-- "0..*" Session : sessions
+SeminarSystem "1" *-- "0..*" Evaluation : evaluations
+SeminarSystem "1" *-- "0..*" Award : awards
+SeminarSystem "1" *-- "0..*" Report : reports
+
+class LoginScreen
+class StudentDashboard
+class CoordinatorDashboard
+class EvaluatorDashboard
+class RegistrationForm
+
+LoginScreen ..> SeminarSystem : reads users
+LoginScreen ..> StudentDashboard : opens
+LoginScreen ..> CoordinatorDashboard : opens
+LoginScreen ..> EvaluatorDashboard : opens
+StudentDashboard ..> RegistrationForm : opens
+RegistrationForm ..> Submission : creates
+CoordinatorDashboard ..> SeminarSystem : manages sessions/evaluations/awards/reports
+EvaluatorDashboard ..> SeminarSystem : submits evaluations
+
+class Award {
+  - awardName : String
+  - winner : Student
+  - score : double
+  - awardedAt : Date
+  + Award(awardName : String, winner : Student, score : double)
+  + getAwardName() : String
+  + getWinner() : Student
+  + getScore() : double
+  + getAwardedAt() : Date
+  + toString() : String
+}
+
+class Report {
+  - generatedDate : Date
+  - content : String
+  + Report(content : String)
+  + getGeneratedDate() : Date
+  + getContent() : String
+  + {static} generate(sessions : ArrayList<Session>, evaluations : ArrayList<Evaluation>, awards : ArrayList<Award>) : Report
+}
+
+Award "1" --> "1" Student : winner
+CoordinatorDashboard ..> Award : creates
+CoordinatorDashboard ..> Report : generates
+
+@enduml

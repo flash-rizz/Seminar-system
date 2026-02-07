@@ -1,0 +1,38 @@
+@startuml
+skinparam monochrome true
+skinparam shadowing false
+
+title Coordinator computes awards and top 3 rankings
+
+actor "Coordinator" as coordActor
+participant ":CoordinatorDashboard" as dash
+participant ":SeminarSystem" as sys
+participant "evaluation:Evaluation" as eval
+participant "award:Award" as award
+
+coordActor -> dash : click "Compute Awards"
+activate dash
+dash -> sys : evaluations (read SeminarSystem.evaluations)
+activate sys
+sys --> dash : ArrayList<Evaluation>
+deactivate sys
+
+alt evaluations empty
+  dash -> dash : awardResultLabel.setText("No evaluations available.")
+else evaluations not empty
+  dash -> dash : computeAverageScores()\n(per session/submission)
+  dash -> award : new Award("Best Oral", winner, score)
+  dash -> award : new Award("Best Poster", winner, score)
+  dash -> award : new Award("People's Choice", winner, votes)
+  dash -> sys : awards.removeIf(name in {Best Oral, Best Poster, People's Choice})
+  dash -> sys : awards.add(awards)
+  dash -> dash : awardResultLabel.setText("Awards computed: ...")
+end
+
+coordActor -> dash : click "Show Top 3"
+dash -> dash : computeAverageScores()
+dash -> dash : sort by avg score desc
+dash -> dash : JOptionPane.showMessageDialog("Top 3 Rankings: ...")
+
+deactivate dash
+@enduml

@@ -1,0 +1,43 @@
+@startuml
+skinparam monochrome true
+skinparam shadowing false
+
+title Student registers presentation, selects session, uploads file
+
+actor "Student" as studentActor
+participant ":StudentDashboard" as dash
+participant ":RegistrationForm" as form
+participant "student:Student" as student
+participant "submission:Submission" as submission
+participant "session:Session" as session
+
+studentActor -> dash : click "Register Presentation"
+activate dash
+dash -> form : new RegistrationForm(student)
+activate form
+
+studentActor -> form : enter title, abstract,\nsupervisor, type, boardId(if poster)
+studentActor -> form : select session
+studentActor -> form : click "Upload File"
+form -> form : JFileChooser.showOpenDialog()
+alt file chosen
+  form -> form : selectedFilePath = file.getAbsolutePath()
+  form -> form : fileLabel.setText(file.getName())
+else cancel
+  form -> form : selectedFilePath stays null
+end
+
+studentActor -> form : click "Submit"
+alt validation OK (fields + session + boardId)
+  form -> submission : new Submission(student, title, abstract,\nsupervisor, type, filePath, boardId, session)
+  form -> student : addSubmission(submission)
+  form -> session : setStudent(student)
+  form -> form : JOptionPane.showMessageDialog("Registration Successful!")
+  form -> form : dispose()
+else validation fails
+  form -> form : JOptionPane.showMessageDialog(error)
+end
+
+deactivate form
+deactivate dash
+@enduml

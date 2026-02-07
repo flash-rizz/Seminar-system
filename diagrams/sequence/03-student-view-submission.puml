@@ -1,0 +1,28 @@
+@startuml
+skinparam monochrome true
+skinparam shadowing false
+
+title Student views own submissions
+
+actor "Student" as studentActor
+participant ":StudentDashboard" as dash
+participant "student:Student" as student
+participant "submission:Submission" as submission
+
+studentActor -> dash : click "View My Submissions"
+activate dash
+dash -> student : getSubmissions()
+student --> dash : ArrayList<Submission>
+
+alt submissions empty
+  dash -> dash : JOptionPane.showMessageDialog("No submissions yet!")
+else submissions exist
+  loop for each submission
+    dash -> submission : getSession()\ngetTitle()\ngetSupervisor()\ngetPresentationType()\ngetBoardId()\ngetFilePath()
+    submission --> dash : details
+  end
+  dash -> dash : JOptionPane.showMessageDialog(list)
+end
+
+deactivate dash
+@enduml
