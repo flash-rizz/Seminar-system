@@ -16,6 +16,7 @@ public class StudentDashboard extends JFrame {
         registerBtn.addActionListener(e -> new RegistrationForm(student));
 
         JButton viewBtn = new JButton("View My Submission");
+        JButton logoutBtn = new JButton("Logout");
 
         viewBtn.addActionListener(e -> {
             Submission s = student.getSubmission();
@@ -33,9 +34,15 @@ public class StudentDashboard extends JFrame {
             }
         });
 
-        setLayout(new GridLayout(2,1));
+        logoutBtn.addActionListener(e -> {
+            dispose();
+            new LoginScreen();
+        });
+
+        setLayout(new GridLayout(3,1));
         add(registerBtn);
         add(viewBtn);
+        add(logoutBtn);
 
         setVisible(true);
     }
