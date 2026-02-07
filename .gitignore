@@ -8,8 +8,9 @@
 .DS_Store
 Thumbs.db
 
-# Generated diagram exports
-diagrams/**/*.png
+# Diagram sources (keep only PNGs)
+diagrams/**/*.puml
 
 # Local PlantUML binary
 tools/plantuml.jar
+diagrams/sequence/plantuml.jar
